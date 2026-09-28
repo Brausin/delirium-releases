@@ -37,6 +37,8 @@ entero sin internet y nada se pierde ni se pisa.
 - 🔌 **100 % funcional sin internet**; sincronización automática al reconectar, con cola durable y recuperación de errores visible en la UI.
 - 🧾 Facturación con numeración a prueba de colisiones entre dispositivos (resolución en el servidor + auditoría).
 - 🍧 Control de calidad BPM: 15 formatos diligenciables con historial.
+- 🏪 **Tienda de fábrica**: punto de venta del local con lector de código de barras, caja por turnos con arqueo ciego, compras con costo por factura, inventario y finanzas propias.
+- 👥 **Perfiles por usuario** (Administrador, Operador, Tienda): quien vende en el local solo ve la tienda, y el servidor lo hace cumplir.
 - 🔐 Cifrado de la base local, login con allowlist y RLS en el servidor.
 - 📱 Envío de facturas por WhatsApp desde el escritorio.
 - 🔄 **Se actualiza sola**: la app descarga cada versión nueva en segundo plano con barra de progreso y se instala al reiniciar.
@@ -51,9 +53,8 @@ flowchart LR
   end
   EXE --> DB1[("SQLite local<br/>cifrada")]
   PWA --> DB2[("SQLite local<br/>OPFS / IndexedDB")]
-  DB1 <-->|sync streams| PS["☁️ PowerSync Cloud"]
-  DB2 <-->|sync streams| PS
-  PS <-->|replicación lógica| SB[("Supabase<br/>Postgres + Auth + RLS")]
+  DB1 <-->|cola de subida + bajada por páginas| SB[("Supabase<br/>Postgres + Auth + RLS")]
+  DB2 <-->|cola de subida + bajada por páginas| SB
 ```
 
 La UI nunca habla con el servidor: lee y escribe **siempre** en la base local,
@@ -66,10 +67,10 @@ funciona igual con o sin red.
 | --- | --- |
 | Escritorio | Electron + electron-builder + electron-updater (NSIS, auto-update) |
 | Web / móvil | PWA con service worker (precache completo, funciona offline) |
-| UI | React 18 · TypeScript estricto · Tailwind CSS |
+| UI | React 19 · TypeScript estricto · Tailwind CSS 4 |
 | Datos locales | SQLite (wa-sqlite WASM) · Drizzle ORM · cifrado ChaCha20 |
-| Sincronización | PowerSync (offline-first, sync streams) |
-| Backend | Supabase (Postgres, Auth, RLS, Storage) |
+| Sincronización | Directa contra Supabase: cola durable de subida (`aplicar_lote`, permisos por perfil) y bajada por páginas según el perfil |
+| Backend | Supabase (Postgres, Auth, RLS por perfil, Storage, Edge Functions) |
 
 ## 📦 Sobre este repositorio
 
